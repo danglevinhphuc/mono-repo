@@ -36,10 +36,20 @@ jobs:
     needs: [lint, test]
     steps:
     - uses: actions/checkout@v4
-    - name: Build Docker image
-      run: docker build . --file Dockerfile --tag nodejs-ci-cd-demo:latest
-    # In a real setup, you would push this image to a registry like Docker Hub or ECR
-    # - name: Push Docker image
-    #   run: |
-    #     echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-    #     docker push nodejs-ci-cd-demo:latest
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: Dockerfile
+        push: true
+        tags: phucdang123456/nodejs-ci-cd-demo:latest
