@@ -53,4 +53,6 @@ jobs:
         context: .
         file: Dockerfile
         push: true
-        tags: phucdang123456/nodejs-ci-cd-demo:latest
+        tags: |
+          phucdang123456/nodejs-ci-cd-demo:latest
+          phucdang123456/nodejs-ci-cd-demo:${{ github.sha }}
