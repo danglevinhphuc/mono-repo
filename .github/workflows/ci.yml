@@ -56,6 +56,7 @@ jobs:
     - name: Build and Push Docker Image
       run: |
         export SHA=${{ steps.vars.outputs.sha }}
-        docker build -t phucdang123456/nodejs-ci-cd-demo:$SHA -t phucdang123456/nodejs-ci-cd-demo:latest .
-        docker push phucdang123456/nodejs-ci-cd-demo:$SHA
-        docker push phucdang123456/nodejs-ci-cd-demo:latest
+        export REPO=${{ vars.DOCKER_REPOSITORY }}
+        docker build -t $REPO:$SHA -t $REPO:latest .
+        docker push $REPO:$SHA
+        docker push $REPO:latest

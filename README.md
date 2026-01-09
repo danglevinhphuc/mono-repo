@@ -1,93 +1,105 @@
-# Node.js CI/CD Demo with TypeScript & PostgreSQL
+# Node.js CI/CD Demo
 
-This project demonstrates a robust CI/CD ready Node.js application using TypeScript, PostgreSQL, and Docker.
+A robust, production-ready Node.js application showcasing **Clean Architecture**, **TypeScript**, **PostgreSQL**, **Docker**, and **GitHub Actions**.
 
-## Setup
+## 🚀 Features
 
-1.  **Install Dependencies**:
-    ```bash
-    npm install
-    ```
+-   **Clean Architecture**: Separation of concerns (Domain, Application, Infrastructure, Interface).
+-   **TypeScript**: Static typing for reliability.
+-   **PostgreSQL**: Relational database with connection pooling.
+-   **Flyway**: Automated database migrations.
+-   **Docker & Compose**: Consistent development and deployment environments.
+-   **GitHub Actions**: Automated CI/CD pipeline (Lint, Test, Build, Push).
 
-2.  **Run with Docker Compose** (Recommended):
-    ```bash
-    docker-compose up --build
-    ```
-    This starts the application on port `3000` and a PostgreSQL database on port `5432`.
+---
 
-3.  **Run Locally (Dev)**:
-    Ensure you have a PostgreSQL instance running and configured in `.env` (or use defaults).
-    ```bash
-    npm run dev
-    ```
+## 🛠️ Setup & Installation
 
-4.  **Run Tests**:
-    ```bash
-    npm test
-    ```
-    (Enforces 80% code coverage)
+### Prerequisites
+-   Node.js (v18+)
+-   Docker & Docker Compose
 
-## API Documentation (cURL Examples)
-
-Here are the commands to test the API endpoints.
-
-### 1. Health Check
-Verify the application is running.
-
+### Fast Start (Local)
+Run everything (DB, Migrations, App) with one command:
 ```bash
-curl -X GET http://localhost:3000/health
+docker-compose up --build
 ```
-**Expected Response:**
-```json
-{"status":"ok"}
-```
+-   App: `http://localhost:3000`
+-   DB: `localhost:5432`
 
-### 2. Create an Item
-Add a new item to the database.
+---
 
+## 🏃 Manual Execution Scripts
+
+We provide scripts to run the application manually in Docker without `docker-compose` (useful for debugging or single-container testing).
+
+### 1. Build & Run Locally
+Builds the image from source and runs it connected to a local Postgres container.
 ```bash
-curl -X POST http://localhost:3000/items \
-  -H "Content-Type: application/json" \
-  -d '{"name": "My First Item"}'
-```
-**Expected Response:**
-```json
-{"id": 1, "name": "My First Item", "created_at": "..."}
+npm run run-prod
+# OR
+sh run.sh
 ```
 
-### 3. List All Items
-Retrieve all items.
-
+### 2. Run from Docker Hub
+Download and run the image directly from the registry.
 ```bash
-curl -X GET http://localhost:3000/items
-```
-**Expected Response:**
-```json
-[{"id": 1, "name": "My First Item", ...}]
+# Usage: sh run-hub.sh <TAG> [REPO_NAME]
+sh run-hub.sh latest
+# OR specific tag
+sh run-hub.sh bc0e739...
+# OR custom repository
+sh run-hub.sh latest myuser/myrepo
 ```
 
-### 4. Get Single Item
-Get an item by ID.
+---
 
+## ⚙️ CI/CD Configuration
+
+The project uses GitHub Actions (`.github/workflows/ci.yml`).
+
+### Workflow Steps
+1.  **Lint**: Checks code style (`npm run lint`).
+2.  **Test**: Runs unit tests (`npm test`).
+3.  **Build & Push**: Builds the Docker image and pushes to Docker Hub with `latest` and `SHA` tags.
+
+### Required Secrets & Variables
+To enable the CI/CD pipeline, configure these in your GitHub Repository settings:
+
+| Type | Name | Description |
+| :--- | :--- | :--- |
+| **Secret** | `DOCKER_USERNAME` | Your Docker Hub Username |
+| **Secret** | `DOCKER_PASSWORD` | Your Docker Hub Access Token |
+| **Variable** | `DOCKER_REPOSITORY` | Repository name (e.g. `user/repo`) |
+
+*Note: Define variables under `Settings > Secrets and variables > Actions > Variables` (Environment: `CI/CD Nodejs`).*
+
+---
+
+## 🧪 Testing
+
+### Unit Tests
+Run Jest unit tests with coverage (Threshold: 80%):
 ```bash
-curl -X GET http://localhost:3000/items/1
+npm test
 ```
 
-### 5. Delete an Item
-Remove an item by ID.
+### API Testing (Postman)
+Import `postman_collection.json` into Postman to test:
+-   `GET /health`
+-   `GET /items`
+-   `POST /items`
+-   `GET /items/:id`
+-   `DELETE /items/:id`
 
+### Manual cURL
 ```bash
-curl -X DELETE http://localhost:3000/items/1
-```
-**Expected Response:** `204 No Content`
+# Health
+curl http://localhost:3000/health
 
-### 6. Verify Deletion
-Try to get the deleted item.
+# Create
+curl -X POST http://localhost:3000/items -H "Content-Type: application/json" -d '{"name": "Demo Item"}'
 
-```bash
-curl -X GET http://localhost:3000/items/1
-```
-**Expected Response:**
-```json
-{"error": "Item not found"}
+# List
+curl http://localhost:3000/items
 ```
