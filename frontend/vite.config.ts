@@ -11,7 +11,7 @@ export default defineConfig({
     setupFiles: './src/setupTests.ts',
     server: {
       deps: {
-        inline: ['jsdom', 'html-encoding-sniffer'],
+        inline: ['jsdom', 'html-encoding-sniffer', '@exodus/bytes', 'whatwg-mimetype'],
       },
     },
   },
