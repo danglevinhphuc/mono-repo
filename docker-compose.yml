@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   app:
-    build: .
-    ports:
-      - "3000:3000"
+    build: ./backend
     environment:
       - PORT=3000
       - POSTGRES_USER=myuser
@@ -18,11 +16,20 @@ services:
     networks:
       - app-network
 
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    networks:
+      - app-network
+
   flyway:
     image: flyway/flyway
     command: -connectRetries=60 -url=jdbc:postgresql://postgres:5432/mydb -user=myuser -password=mypassword -baselineOnMigrate=true migrate
     volumes:
-      - ./db/migration:/flyway/sql
+      - ./backend/db/migration:/flyway/sql
     depends_on:
       - postgres
     networks:
