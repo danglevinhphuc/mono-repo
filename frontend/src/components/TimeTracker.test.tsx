@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { TimeTracker } from './TimeTracker';
 import * as api from '../api';
 
@@ -26,7 +26,7 @@ describe('TimeTracker Component', () => {
             { id: 1, name: 'Task 1' },
             { id: 2, name: 'Task 2' },
         ];
-        (api.getItems as any).mockResolvedValue(mockItems);
+        (api.getItems as Mock).mockResolvedValue(mockItems);
 
         render(<TimeTracker />);
 
@@ -37,8 +37,8 @@ describe('TimeTracker Component', () => {
     });
 
     it('adds a new item', async () => {
-        (api.getItems as any).mockResolvedValue([]);
-        (api.createItem as any).mockResolvedValue({ id: 10, name: 'New Task' });
+        (api.getItems as Mock).mockResolvedValue([]);
+        (api.createItem as Mock).mockResolvedValue({ id: 10, name: 'New Task' });
 
         render(<TimeTracker />);
 
@@ -57,8 +57,8 @@ describe('TimeTracker Component', () => {
 
     it('deletes an item', async () => {
         const mockItems = [{ id: 1, name: 'Delete Me' }];
-        (api.getItems as any).mockResolvedValue(mockItems);
-        (api.deleteItem as any).mockResolvedValue(true);
+        (api.getItems as Mock).mockResolvedValue(mockItems);
+        (api.deleteItem as Mock).mockResolvedValue(true);
 
         render(<TimeTracker />);
 
