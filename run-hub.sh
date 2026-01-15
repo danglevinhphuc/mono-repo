@@ -38,12 +38,20 @@ echo "Current directory: $PWD"
 ls -l db/migration/V1__Create_items_table.sql
 
 # 3. Run Flyway Migration
+echo "Building temporary migration image..."
+# Create a temp Dockerfile to bake migrations in. 
+# This avoids volume mounting issues with Docker-out-of-Docker where host paths don't match container paths.
+cat <<EOF > Dockerfile.flyway
+FROM flyway/flyway
+COPY db/migration /flyway/sql
+EOF
+
+docker build -t temp-flyway-migration -f Dockerfile.flyway .
+
 echo "Running database migrations..."
-# MSYS_NO_PATHCONV=1 prevents Git Bash from mangling the path /flyway/sql
-MSYS_NO_PATHCONV=1 docker run --rm \
+docker run --rm \
   --network my-network \
-  -v "$PWD/db/migration:/flyway/sql" \
-  flyway/flyway \
+  temp-flyway-migration \
   -url=jdbc:postgresql://postgres-container-name:5432/mydb \
   -user=myuser \
   -password=mypassword \
