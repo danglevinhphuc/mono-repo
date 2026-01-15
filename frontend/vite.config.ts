@@ -7,12 +7,7 @@ export default defineConfig({
   plugins: [react()],
   test: {
     globals: true,
-    environment: 'jsdom',
+    environment: 'happy-dom',
     setupFiles: './src/setupTests.ts',
-    server: {
-      deps: {
-        inline: ['jsdom', 'html-encoding-sniffer', '@exodus/bytes', 'whatwg-mimetype'],
-      },
-    },
   },
 })
