@@ -1,5 +1,5 @@
 {
-  "name": "mono-repo",
+  "name": "backend",
   "version": "1.0.0",
   "description": "Demo project for Node.js CI/CD deployment",
   "main": "src/index.js",
