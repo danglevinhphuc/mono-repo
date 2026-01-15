@@ -1,10 +1,12 @@
 import express, { Express, Request, Response } from 'express';
+import cors from 'cors';
 import { ItemController } from './interfaces/http/ItemController';
 import { createItemRouter } from './interfaces/http/routes';
 
 export function createApp(itemController: ItemController): Express {
     const app = express();
 
+    app.use(cors());
     app.use(express.json());
 
     app.get('/', (req: Request, res: Response) => {

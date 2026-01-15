@@ -1,4 +1,4 @@
-name: Running CI
+name: Monorepo CI/CD
 
 on:
   push:
@@ -7,56 +7,86 @@ on:
     branches: [ "main" ]
 
 jobs:
-  lint:
+  # ============================================================================
+  # Backend CI
+  # ============================================================================
+  backend-ci:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
     steps:
     - uses: actions/checkout@v4
+    
     - name: Use Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18.x'
         cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+        
     - run: npm ci
     - run: npm run lint
+    - run: npm test
 
-  test:
+  # ============================================================================
+  # Frontend CI
+  # ============================================================================
+  frontend-ci:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
     steps:
     - uses: actions/checkout@v4
+    
     - name: Use Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18.x'
         cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+        
     - run: npm ci
+    - run: npm run lint
     - run: npm test
 
-  build:
+  # ============================================================================
+  # Build & Push (Only on Push to Main)
+  # ============================================================================
+  build-push:
+    needs: [backend-ci, frontend-ci]
     runs-on: ubuntu-latest
-    needs: [lint, test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: CI/CD Nodejs
     steps:
     - uses: actions/checkout@v4
     
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
     - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
+    
+    # Build Backend
+    - name: Build and Push Backend
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        push: true
+        tags: |
+          ${{ vars.DOCKER_REPOSITORY }}:backend-${{ github.sha }}
+          ${{ vars.DOCKER_REPOSITORY }}:backend-latest
 
-    - name: Get specific Commit ID
-      id: vars
-      run: |
-        if [ "${{ github.event_name }}" == "pull_request" ]; then
-          echo "sha=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
-        else
-          echo "sha=${{ github.sha }}" >> $GITHUB_OUTPUT
-        fi
-
-    - name: Build and Push Docker Image
-      run: |
-        export SHA=${{ steps.vars.outputs.sha }}
-        export REPO=${{ vars.DOCKER_REPOSITORY }}
-        docker build -t $REPO:$SHA -t $REPO:latest .
-        docker push $REPO:$SHA
-        docker push $REPO:latest
+    # Build Frontend
+    - name: Build and Push Frontend
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
+        push: true
+        tags: |
+          ${{ vars.DOCKER_REPOSITORY }}:frontend-${{ github.sha }}
+          ${{ vars.DOCKER_REPOSITORY }}:frontend-latest

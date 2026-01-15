@@ -35,7 +35,7 @@ sleep 10
 
 # Debug: Check if migration file exists
 echo "Current directory: $PWD"
-ls -l db/migration/V1__Create_items_table.sql
+ls -l backend/db/migration/V1__Create_items_table.sql
 
 # 3. Run Flyway Migration
 echo "Building temporary migration image..."
@@ -43,7 +43,7 @@ echo "Building temporary migration image..."
 # This avoids volume mounting issues with Docker-out-of-Docker where host paths don't match container paths.
 cat <<EOF > Dockerfile.flyway
 FROM flyway/flyway
-COPY db/migration /flyway/sql
+COPY backend/db/migration /flyway/sql
 EOF
 
 docker build -t temp-flyway-migration -f Dockerfile.flyway .
@@ -59,8 +59,10 @@ docker run --rm \
   -baselineOnMigrate=true \
   migrate
 
-# 4. Run the Application
-echo "Starting application from Hub..."
+# 5. Run the Backend Application
+echo "Starting Backend from Hub..."
+BACKEND_IMAGE="${REPO_NAME}:backend-${IMAGE_TAG}"
+FRONTEND_IMAGE="${REPO_NAME}:frontend-${IMAGE_TAG}"
 
 DOCKER_FLAGS="--rm"
 if [ "$DETACHED" = "true" ]; then
@@ -68,11 +70,28 @@ if [ "$DETACHED" = "true" ]; then
     echo "Running in detached mode..."
 fi
 
-docker run $DOCKER_FLAGS -p 3000:3000 \
-  --name nodejs-app-container \
+# Stop existing containers if any/old names
+docker rm -f app-container frontend-container app 2>/dev/null || true
+
+# 6. Run the Backend Application
+echo "Starting Backend from Hub..."
+echo "Running Backend: $BACKEND_IMAGE"
+
+# Nginx expects upstream 'app'
+docker run -d --rm \
+  --name app \
   --network my-network \
   -e POSTGRES_HOST=postgres-container-name \
   -e POSTGRES_PASSWORD=mypassword \
   -e POSTGRES_USER=myuser \
   -e POSTGRES_DB=mydb \
-  $FULL_IMAGE
+  $BACKEND_IMAGE
+
+# 7. Run the Frontend Application
+echo "Starting Frontend from Hub..."
+echo "Running Frontend: $FRONTEND_IMAGE"
+
+docker run $DOCKER_FLAGS -p 80:80 \
+  --name frontend-container \
+  --network my-network \
+  $FRONTEND_IMAGE
