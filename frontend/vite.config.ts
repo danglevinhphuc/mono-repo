@@ -9,5 +9,10 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/setupTests.ts',
+    server: {
+      deps: {
+        inline: ['jsdom', 'html-encoding-sniffer'],
+      },
+    },
   },
 })
